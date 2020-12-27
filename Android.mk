@@ -59,6 +59,9 @@ ifeq ($(BOARD_USES_QCOM_FBE_DECRYPTION),true)
 endif
 
 ifeq ($(BOARD_USES_QCOM_DECRYPTION),true)
+    # Include resetprop for prepdecrypt property setting
+    TW_INCLUDE_RESETPROP := true
+
     # Dummy file to apply post-install patch for qcom_decrypt
     include $(CLEAR_VARS)
 

@@ -51,15 +51,18 @@ log_print()
 
 relink()
 {
-	log_print 2 "Looking for $1 to update linker path..."
-	if [ -f "$1" ]; then
-		fname=$(basename "$1")
-		target="/sbin/$fname"
-		log_print 2 "File found! Relinking $1 to $target..."
-		sed 's|/system/bin/linker|///////sbin/linker|' "$1" > "$target"
-		chmod 755 "$target"
+	log_print 2 "Updating linker path for $1..."
+	blobs=$(find $1 -type f -exec echo '{}' \;)
+	if [ -n "$blobs" ]; then
+		for source in $blobs; do
+			fname=$(basename "$source")
+			target="/sbin/$fname"
+			log_print 2 "Relinking $source to $target..."
+			sed 's|/system/bin/linker|///////sbin/linker|' "$source" > "$target"
+			chmod 755 "$target"
+		done
 	else
-		log_print 2 "File not found. Proceeding without relinking..."
+		log_print 2 "$1 not found. Proceeding without relinking..."
 	fi
 }
 
@@ -211,18 +214,8 @@ if [ "$sdkver" -lt 29 ]; then
 			log_print 2 "Device is 32-bit. Vendor library path set to $venlib."
 			;;
 	esac
-	relink "$venbin/qseecomd"
-	relink "$venbin/hw/android.hardware.keymaster@3.0-service"
-	relink "$venbin/hw/android.hardware.keymaster@3.0-service-qti"
-	relink "$venbin/hw/android.hardware.keymaster@4.0-service"
-	relink "$venbin/hw/android.hardware.keymaster@4.0-service-qti"
+	relink "$venbin"
 	relink "$venlib/libQSEEComAPI.so"
-	if [ -f /init.recovery.qcom_decrypt.fbe.rc ]; then
-		log_print 2 "FBE device detected! Performing additional relinking..."
-		relink "$venbin/time_daemon"
-		relink "$venbin/hw/android.hardware.gatekeeper@1.0-service"
-		relink "$venbin/hw/android.hardware.gatekeeper@1.0-service-qti"
-	fi
 fi
 
 ab_device=$(getprop ro.build.ab_update)

@@ -73,9 +73,9 @@ ifeq ($(BOARD_USES_QCOM_DECRYPTION),true)
         elif [ -e $(TARGET_RECOVERY_ROOT_OUT)/init.recovery.qcom.rc ]; then \
         grep -qF 'init.recovery.qcom_decrypt.rc' $(TARGET_RECOVERY_ROOT_OUT)/init.recovery.qcom.rc || \
         echo -e '\nimport /init.recovery.qcom_decrypt.rc' >> $(TARGET_RECOVERY_ROOT_OUT)/init.recovery.qcom.rc; \
-        elif [ -e device/$(PRODUCT_BRAND)/$(TARGET_DEVICE)/recovery/root/init.recovery.qcom.rc ]; then \
-        grep -qF 'init.recovery.qcom_decrypt.rc' device/$(PRODUCT_BRAND)/$(TARGET_DEVICE)/recovery/root/init.recovery.qcom.rc || \
-        echo -e '\nimport /init.recovery.qcom_decrypt.rc' >> device/$(PRODUCT_BRAND)/$(TARGET_DEVICE)/recovery/root/init.recovery.qcom.rc; \
+        elif [ -e device/$(shell echo $(PRODUCT_BRAND) | tr  '[:upper:]' '[:lower:]')/$(TARGET_DEVICE)/recovery/root/init.recovery.qcom.rc ]; then \
+        grep -qF 'init.recovery.qcom_decrypt.rc' device/$(shell echo $(PRODUCT_BRAND) | tr  '[:upper:]' '[:lower:]')/$(TARGET_DEVICE)/recovery/root/init.recovery.qcom.rc || \
+        echo -e '\nimport /init.recovery.qcom_decrypt.rc' >> device/$(shell echo $(PRODUCT_BRAND) | tr  '[:upper:]' '[:lower:]')/$(TARGET_DEVICE)/recovery/root/init.recovery.qcom.rc; \
         else echo -e '\n*** init.recovery.qcom.rc not found ***\nYou will need to manually add the import for init.recovery.qcom_decrypt.rc to your init.recovery.(ro.hardware).rc file!!\n'; fi; \
         cp -Ra $(LOCAL_PATH)/crypto/system $(TARGET_ROOT_OUT)/;
 

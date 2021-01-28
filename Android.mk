@@ -77,7 +77,7 @@ ifeq ($(BOARD_USES_QCOM_DECRYPTION),true)
         grep -qF 'init.recovery.qcom_decrypt.rc' device/$(PRODUCT_BRAND)/$(TARGET_DEVICE)/recovery/root/init.recovery.qcom.rc || \
         echo -e '\nimport /init.recovery.qcom_decrypt.rc' >> device/$(PRODUCT_BRAND)/$(TARGET_DEVICE)/recovery/root/init.recovery.qcom.rc; \
         else echo -e '\n*** init.recovery.qcom.rc not found ***\nYou will need to manually add the import for init.recovery.qcom_decrypt.rc to your init.recovery.(ro.hardware).rc file!!\n'; fi; \
-        cp -Ra $(LOCAL_PATH)/crypto/system $(TARGET_RECOVERY_ROOT_OUT)/;
+        cp -Ra $(LOCAL_PATH)/crypto/system $(TARGET_ROOT_OUT)/;
 
     ifeq ($(PRODUCT_USE_DYNAMIC_PARTITIONS),true)
         LOCAL_POST_INSTALL_CMD += \

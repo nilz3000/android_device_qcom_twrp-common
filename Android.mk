@@ -15,21 +15,6 @@
 
 LOCAL_PATH := $(call my-dir)
 
-# Dummy file to apply post-install patch for tzdata
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := tzdata_twrp
-LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE_CLASS := ETC
-LOCAL_MODULE_PATH := $(TARGET_ROOT_OUT)/system/bin
-LOCAL_REQUIRED_MODULES := tzdata
-
-LOCAL_POST_INSTALL_CMD += \
-    mkdir -p $(TARGET_RECOVERY_ROOT_OUT)/system/usr/share/zoneinfo; \
-    cp -f $(TARGET_OUT)/usr/share/zoneinfo/tzdata $(TARGET_RECOVERY_ROOT_OUT)/system/usr/share/zoneinfo/;
-
-include $(BUILD_PHONY_PACKAGE)
-
 ifeq ($(BOARD_USES_QCOM_FBE_DECRYPTION),true)
     BOARD_USES_QCOM_DECRYPTION := true
 

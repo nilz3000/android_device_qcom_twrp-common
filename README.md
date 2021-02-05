@@ -41,23 +41,10 @@ If you forget to add the above import, the build tree will add it for you if it 
 
 If for some reason these scripts do not work for you, increase the loglevel to `2` in [prepdecrypt.sh](https://github.com/TeamWin/android_device_qcom_twrp-common/blob/android-9.0/crypto/sbin/prepdecrypt.sh#L22) and review the additional logging in the recovery.log to see where the process is failing.
 
-### tzdata package
-The tree also provides a package to add tzdata to the TWRP tree, to get rid of these errors:
-```
-__bionic_open_tzdata: couldn't find any tzdata when looking for xxxxx
-```
-
-To include tzdata in your TWRP build, add the corresponding package to your device.mk as indicated below:
-```
-PRODUCT_PACKAGES += \
-    tzdata_twrp
-```
-
 ## Example Device Trees
 - android-8.1: [HTC U12+](https://github.com/TeamWin/android_device_htc_ime/tree/android-8.1/recovery/root)
 - android-9.0: [ASUS ROG Phone II](https://github.com/CaptainThrowback/android_device_asus_I001D/tree/android-9.0/recovery/root)
-- android-10: [ASUS ROG Phone 3/ZenFone 7 Series](https://github.com/CaptainThrowback/android_device_asus_sm8250-common/tree/android-10/recovery/root)
-
+- android-10: ASUS ROG Phone 3 ([common tree](https://github.com/TeamWin/android_device_asus_sm8250-common/tree/android-10/recovery/root)/[device tree](https://github.com/TeamWin/android_device_asus_I003D))
 
 ### Using ldcheck to find dependencies
 The easiest way to find dependencies for the blobs you add from your device's vendor partition is using the ldcheck Python script. The syntax for using the script is below:

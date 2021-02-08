@@ -10,7 +10,8 @@ find_dt_blobs()
 		blob_path="$dt_ramdisk/$1"
 	else
 		echo "Unable to locate device tree blobs. Exiting script."
-		exit 1
+		echo " "
+		exit 0
 	fi
 	included_blobs=($(find "$blob_path" -type f \( -name "*keymaster*" -o -name "*gatekeeper*" \) | awk -F'/' '{print $NF}'))
 }
@@ -103,7 +104,8 @@ if [ -n "$included_blobs" ]; then
 	echo " "
 else
 	echo "No blobs parsed! Exiting script."
-	exit 2
+	echo " "
+	exit 0
 fi
 
 # pull filenames from init.recovery.qcom_decrypt.rc & init.recovery.qcom_decrypt.fbe files

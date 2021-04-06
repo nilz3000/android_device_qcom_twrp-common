@@ -51,7 +51,7 @@ ifeq ($(BOARD_USES_QCOM_DECRYPTION),true)
     LOCAL_MODULE_TAGS := optional
     LOCAL_MODULE_CLASS := ETC
     LOCAL_MODULE_PATH := $(TARGET_ROOT_OUT)/sbin
-    LOCAL_REQUIRED_MODULES := teamwin
+    LOCAL_REQUIRED_MODULES := teamwin android.hardware.boot@1.0 android.hidl.token@1.0
 
     # Cannot send to TARGET_RECOVERY_ROOT_OUT since build system wipes init*.rc
     # during ramdisk creation and only allows init.recovery.*.rc files to be copied

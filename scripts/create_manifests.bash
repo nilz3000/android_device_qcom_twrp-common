@@ -17,10 +17,10 @@ find_dt_blobs()
 
 generate_manifests()
 {
-	mkdir -p "$systemout"
-	mkdir -p "$vendorout"
-	system_manifest_file="$systemout/manifest.xml"
-	vendor_manifest_file="$vendorout/manifest.xml"
+	mkdir -p "$systemout/$manifest_folder"
+	mkdir -p "$vendorout/$manifest_folder"
+	system_manifest_file="$systemout/$manifest_folder/manifest.xml"
+	vendor_manifest_file="$vendorout/$manifest_folder/manifest.xml"
 	echo -e '<manifest version="1.0" type="">' > "$system_manifest_file"
 	echo -e '<manifest version="1.0" type="">' > "$vendor_manifest_file"
 	for blob in "${included_blobs[@]}"; do
@@ -79,8 +79,8 @@ recoveryout="$OUT/recovery/root"
 rootout="$OUT/root"
 sysbin="system/bin"
 systemout="$OUT/system"
-venbin="vendor/bin"
 vendorout="$OUT/vendor"
+manifest_folder="etc/vintf"
 decrypt_fbe_rc="init.recovery.qcom_decrypt.fbe.rc"
 
 echo " "
@@ -120,12 +120,14 @@ generate_manifests
 
 # Copy the manifests
 if [ -e "$recoveryout/system_root" ]; then
-	cp -f "$system_manifest_file" "$recoveryout/system_root/system/"
+	mkdir -p "$recoveryout/system_root/system/$manifest_folder/"
+	cp -f "$system_manifest_file" "$recoveryout/system_root/system/$manifest_folder/"
 else
-	cp -f "$system_manifest_file" "$recoveryout/system/"
+	mkdir -p "$recoveryout/system/$manifest_folder/"
+	cp -f "$system_manifest_file" "$recoveryout/system/$manifest_folder/"
 fi
-mkdir -p "$recoveryout/vendor"
-cp -f "$vendor_manifest_file" "$recoveryout/vendor/"
+mkdir -p "$recoveryout/vendor/$manifest_folder"
+cp -f "$vendor_manifest_file" "$recoveryout/vendor/$manifest_folder/"
 
 echo " "
 echo -e "$SCRIPTNAME script complete.\n"

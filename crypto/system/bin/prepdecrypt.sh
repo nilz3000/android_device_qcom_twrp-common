@@ -6,6 +6,17 @@ SCRIPTNAME="PrepDecrypt"
 LOGFILE=/tmp/recovery.log
 
 #
+# Override default settings
+#
+# If you want to force setting of osver and patchlevel to the system/vendor version,
+# set the below props in init.recovery "on init" to trigger the override function
+SETPATCH_OVERRIDE=$(getprop prepdecrypt.setpatch_override)
+SETPATCH=$(getprop prepdecrypt.setpatch)
+if [ -z "$SETPATCH_OVERRIDE" ]; then
+    SETPATCH_OVERRIDE=false
+fi
+
+#
 # Default TWRP values for PLATFORM_VERSION and PLATFORM_SECURITY_PATCH
 #
 # ro.build.version.release and ro.build.version.security_patch will get
@@ -16,10 +27,16 @@ osver_twrp="20.1.0"
 patchlevel_twrp="2099-12-31"
 
 # Set default log level
+DEFAULT_LOGLEVEL=1
 # 0 Errors only
 # 1 Errors and Information
 # 2 Errors, Information, and Debugging
-__VERBOSE=1
+CUSTOM_LOGLEVEL=$(getprop prepdecrypt.loglevel)
+if [ -n "$CUSTOM_LOGLEVEL" ]; then
+    __VERBOSE="$CUSTOM_LOGLEVEL"
+else
+    __VERBOSE="$DEFAULT_LOGLEVEL"
+fi
 
 # Exit codes:
 # 0 Success
@@ -31,13 +48,13 @@ log_print()
 {
 	# 0 = Error; 1 = Information; 2 = Debugging
 	case $1 in
-		0)
+		0|error)
 			LOG_LEVEL="E"
 			;;
-		1)
+		1|info)
 			LOG_LEVEL="I"
 			;;
-		2)
+		2|debug)
 			LOG_LEVEL="DEBUG"
 			;;
 		*)
@@ -52,7 +69,7 @@ log_print()
 relink()
 {
 	log_print 2 "Updating linker path for $1..."
-	blobs=$(find $1 -type f -exec echo '{}' \;)
+	blobs=$(find "$1" -type f -exec echo '{}' \;)
 	if [ -n "$blobs" ]; then
 		for source in $blobs; do
 			fname=$(basename "$source")
@@ -99,13 +116,13 @@ finish_error()
 
 osver_default_value()
 {
-	osver_default=$(grep "$1" /"$DEFAULTPROP")
+	osver_default=$(grep "$1=" /"$DEFAULTPROP")
 	log_print 2 "$DEFAULTPROP value: $osver_default"
 }
 
 patchlevel_default_value()
 {
-	patchlevel_default=$(grep "$1" /"$DEFAULTPROP")
+	patchlevel_default=$(grep "$1=" /"$DEFAULTPROP")
 	log_print 2 "$DEFAULTPROP value: $patchlevel_default"
 	finish
 }
@@ -153,6 +170,23 @@ check_encrypt()
 		log_print 0 "Unknown decryption type or type not set. Exiting script."
 		exit 1
 	fi
+}
+
+check_fastboot_boot()
+{
+	is_fastboot_boot=$(getprop ro.boot.fastboot)
+    if [ -n "$is_fastboot_boot" ]; then
+        log_print 2 "Fastboot boot detected. ro.boot.fastboot=$is_fastboot_boot"
+    fi
+	skip_initramfs_present=$(grep skip_initramfs /proc/cmdline)
+    if [ -z "$is_fastboot_boot" ] && [ -n "$skip_initramfs_present" ]; then
+        log_print 2 "skip_initramfs flag found. Setting ro.boot.fastboot..."
+        $setprop_bin ro.boot.fastboot 1
+        is_fastboot_boot=$(getprop ro.boot.fastboot)
+        log_print 2 "ro.boot.fastboot=$is_fastboot_boot"
+    else
+        is_fastboot_boot=0
+    fi
 }
 
 check_resetprop()
@@ -240,13 +274,17 @@ if [ -e "$recpath" ]; then
 	SETPATCH=false
 else
 	log_print 2 "No recovery partition found."
-	SETPATCH=true
+    if [ "$SETPATCH_OVERRIDE" = "false" ]; then
+        SETPATCH=true
+    else
+        log_print 2 "SETPATCH Override flag found."
+        log_print 2 "SETPATCH=$SETPATCH"
+    fi
 fi
 
 if [ "$sdkver" -ge 26 ]; then
-	is_fastboot_boot=$(getprop ro.boot.fastboot)
-	skip_initramfs_present=$(grep skip_initramfs /proc/cmdline)
-	if [ "$SETPATCH" = false ] || [ -n "$skip_initramfs_present" ] || [ -n "$is_fastboot_boot" ]; then
+    check_fastboot_boot
+	if [ "$SETPATCH" = false ] || [ -n "$is_fastboot_boot" ]; then
 		log_print 1 "SETPATCH=false, skip_initramfs flag, or ro.boot.fastboot found."
 		# Be sure to increase the PLATFORM_VERSION in build/core/version_defaults.mk to override Google's anti-rollback features to something rather insane
 		update_default_values "$osver" "$osver_orig" "OS version" "ro.build.version.release" osver_default_value

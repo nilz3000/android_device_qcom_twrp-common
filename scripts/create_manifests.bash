@@ -21,19 +21,37 @@ generate_manifests()
 	mkdir -p "$vendorout/$manifest_folder"
 	system_manifest_file="$systemout/$manifest_folder/manifest.xml"
 	vendor_manifest_file="$vendorout/$manifest_folder/manifest.xml"
-	echo -e '<manifest version="1.0" type="">' > "$system_manifest_file"
-	echo -e '<manifest version="1.0" type="">' > "$vendor_manifest_file"
+	if [ -e "$system_manifest_file" ]; then
+		system_manifest_exists=true
+		echo "System manifest file already exists. Skipping file generation."
+	else
+		echo -e '<manifest version="2.0" type="">' > "$system_manifest_file"
+	fi
+	if [ -e "$vendor_manifest_file" ]; then
+		vendor_manifest_exists=true
+		echo "Vendor manifest file already exists. Skipping file generation."
+	else
+		echo -e '<manifest version="2.0" type="" target-level="5">' > "$vendor_manifest_file"
+	fi
 	for blob in "${included_blobs[@]}"; do
 		case $blob in
 			*.so)
-				manifest_file="$system_manifest_file"
-				manifest_type="framework"
-				blob_name=$(basename "$blob" .so)
+				if [ -z "$system_manifest_exists" ]; then
+					manifest_file="$system_manifest_file"
+					manifest_type="framework"
+					blob_name=$(basename "$blob" .so)
+				else
+					break
+				fi
 				;;
 			*-service*)
-				manifest_file="$vendor_manifest_file"
-				manifest_type="device"
-				blob_name=$(echo "${blob%-service*}")
+				if [ -z "$vendor_manifest_exists" ]; then
+					manifest_file="$vendor_manifest_file"
+					manifest_type="device"
+					blob_name=$(echo "${blob%-service*}")
+				else
+					break
+				fi
 				;;
 		esac
 		sed -i "s/type=\"\"/type=\"$manifest_type\"/" "$manifest_file"
@@ -67,8 +85,12 @@ generate_manifests()
 		echo -e "\t\t<fqname>@$service_version::$interface_name/default</fqname>" >> "$manifest_file"
 		echo -e '\t</hal>' >> "$manifest_file"
 	done
-	echo -e '</manifest>' >> "$system_manifest_file"
-	echo -e '</manifest>' >> "$vendor_manifest_file"
+	if [ -z "$system_manifest_exists" ]; then
+		echo -e '</manifest>' >> "$system_manifest_file"
+	fi
+	if [ -z "$vendor_manifest_exists" ]; then
+		echo -e '</manifest>' >> "$vendor_manifest_file"
+	fi
 }
 
 target_device=${TARGET_PRODUCT#*_}
@@ -119,15 +141,19 @@ printf '%s\n' "${included_blobs[@]}"
 generate_manifests
 
 # Copy the manifests
-if [ -e "$recoveryout/system_root" ]; then
-	mkdir -p "$recoveryout/system_root/system/$manifest_folder/"
-	cp -f "$system_manifest_file" "$recoveryout/system_root/system/$manifest_folder/"
-else
-	mkdir -p "$recoveryout/system/$manifest_folder/"
-	cp -f "$system_manifest_file" "$recoveryout/system/$manifest_folder/"
+if [ -z "$system_manifest_exists" ]; then
+	if [ -e "$recoveryout/system_root" ]; then
+		mkdir -p "$recoveryout/system_root/system/$manifest_folder/"
+		cp -f "$system_manifest_file" "$recoveryout/system_root/system/$manifest_folder/"
+	else
+		mkdir -p "$recoveryout/system/$manifest_folder/"
+		cp -f "$system_manifest_file" "$recoveryout/system/$manifest_folder/"
+	fi
 fi
-mkdir -p "$recoveryout/vendor/$manifest_folder"
-cp -f "$vendor_manifest_file" "$recoveryout/vendor/$manifest_folder/"
+if [ -z "$vendor_manifest_exists" ]; then
+	mkdir -p "$recoveryout/vendor/$manifest_folder"
+	cp -f "$vendor_manifest_file" "$recoveryout/vendor/$manifest_folder/"
+fi
 
 echo " "
 echo -e "$SCRIPTNAME script complete.\n"

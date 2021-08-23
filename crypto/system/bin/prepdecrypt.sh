@@ -160,6 +160,14 @@ update_default_values()
 	fi
 }
 
+check_dynamic()
+{
+	dynamic_partitions=$(getprop ro.boot.dynamic_partitions)
+	if [ "$dynamic_partitions" = "true" ]; then
+		unset suffix
+	fi
+}
+
 check_encrypt()
 {
 	if [ "$sdkver" -ge 26 ]; then
@@ -182,16 +190,14 @@ check_fastboot_boot()
 	if [ -n "$is_fastboot_boot" ]; then
 		log_print 2 "Fastboot boot detected. ro.boot.fastboot=$is_fastboot_boot"
 	fi
-	skip_initramfs_present=$(grep skip_initramfs /proc/cmdline)
-	if [ -z "$is_fastboot_boot" ] && [ -n "$skip_initramfs_present" ]; then
-		log_print 2 "skip_initramfs flag found. Setting ro.boot.fastboot..."
+	twrpfastboot=$(grep twrpfastboot /proc/cmdline)
+	if [ -z "$is_fastboot_boot" ] && [ -n "$twrpfastboot" ]; then
+		log_print 2 "twrpfastboot flag found. Setting ro.boot.fastboot..."
 		$setprop_bin ro.boot.fastboot 1
 		is_fastboot_boot=$(getprop ro.boot.fastboot)
 		log_print 2 "ro.boot.fastboot=$is_fastboot_boot"
 	else
 		log_print 2 "Recovery mode boot detected."
-		is_fastboot_boot=0
-		log_print 2 "is_fastboot_boot=$is_fastboot_boot"
 	fi
 }
 
@@ -219,6 +225,7 @@ temp_mount()
 	if [ -n "$(ls -A "$1" 2>/dev/null)" ]; then
 		log_print 2 "$2 mounted at $1."
 		$setprop_bin prepdecrypt."$2"_mounted 1
+		log_print 2 "prepdecrypt.$2_mounted=$(getprop prepdecrypt."$2"_mounted)"
 	else
 		log_print 0 "Unable to mount $2 to temporary folder."
 		finish_error
@@ -291,15 +298,21 @@ else
 fi
 
 if [ "$sdkver" -ge 26 ]; then
-    check_fastboot_boot
+	if [ -z "$setprop_bin" ]; then
+		check_resetprop
+	fi
+
+	check_fastboot_boot
+
 	if [ "$SETPATCH" = false ] || [ -n "$is_fastboot_boot" ]; then
-		log_print 1 "SETPATCH=false, skip_initramfs flag, or ro.boot.fastboot found."
-		# Be sure to increase the PLATFORM_VERSION in build/core/version_defaults.mk to override Google's anti-rollback features to something rather insane
+		log_print 1 "SETPATCH=false, twrpfastboot flag, or ro.boot.fastboot found."
 		update_default_values "$osver" "$osver_orig" "OS version" "ro.build.version.release" osver_default_value
 		update_default_values "$patchlevel" "$patchlevel_orig" "Security Patch Level" "ro.build.version.security_patch" patchlevel_default_value
 	else
 		log_print 1 "SETPATCH=$SETPATCH"
 		log_print 2 "Build tree is Oreo or above. Proceed with setting props..."
+
+		check_dynamic
 
 		BUILDPROP=build.prop
 		TEMPSYS=/s
@@ -318,7 +331,6 @@ if [ "$sdkver" -ge 26 ]; then
 				log_print 2 "Current vendor Android SDK version: $vensdkver"
 				if [ "$vensdkver" -gt 25 ]; then
 					log_print 2 "Current vendor is Oreo or above. Proceed with setting vendor security patch level..."
-					check_resetprop
 					log_print 2 "Current Vendor Security Patch Level: $venpatchlevel"
 					venpatchlevel=$(grep -i 'ro.vendor.build.security_patch=' "$TEMPVEN/$BUILDPROP"  | cut -f2 -d'=' -s)
 					if [ -n "$venpatchlevel" ]; then
@@ -357,10 +369,6 @@ if [ "$sdkver" -ge 26 ]; then
 			log_print 2 "Current system Android SDK version: $sdkver"
 			if [ "$sdkver" -gt 25 ]; then
 				log_print 2 "Current system is Oreo or above. Proceed with setting OS Version & Security Patch Level..."
-				if [ -z "$setprop_bin" ]; then
-					check_resetprop
-				fi
-				# TODO: It may be better to try to read these from the boot image than from /system
 				log_print 2 "Current OS Version: $osver"
 				osver=$(grep -i 'ro.build.version.release=' "$TEMPSYS/$BUILDPROP"  | cut -f2 -d'=' -s)
 				if [ -n "$osver" ]; then

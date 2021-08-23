@@ -87,9 +87,11 @@ finish()
 {
 	if [ "$SETPATCH" = "true" ]; then
 		umount "$TEMPSYS"
+		$setprop_bin prepdecrypt.system_mounted 0
 		rmdir "$TEMPSYS"
 		if [ "$MNT_VENDOR" = "true" ]; then
 			umount "$TEMPVEN"
+			$setprop_bin prepdecrypt.vendor_mounted 0
 			rmdir "$TEMPVEN"
 		fi
 	fi
@@ -103,9 +105,11 @@ finish_error()
 {
 	if [ "$SETPATCH" = "true" ]; then
 		umount "$TEMPSYS"
+		$setprop_bin prepdecrypt.system_mounted 0
 		rmdir "$TEMPSYS"
 		if [ "$MNT_VENDOR" = "true" ]; then
 			umount "$TEMPVEN"
+			$setprop_bin prepdecrypt.vendor_mounted 0
 			rmdir "$TEMPVEN"
 		fi
 	fi
@@ -175,18 +179,20 @@ check_encrypt()
 check_fastboot_boot()
 {
 	is_fastboot_boot=$(getprop ro.boot.fastboot)
-    if [ -n "$is_fastboot_boot" ]; then
-        log_print 2 "Fastboot boot detected. ro.boot.fastboot=$is_fastboot_boot"
-    fi
+	if [ -n "$is_fastboot_boot" ]; then
+		log_print 2 "Fastboot boot detected. ro.boot.fastboot=$is_fastboot_boot"
+	fi
 	skip_initramfs_present=$(grep skip_initramfs /proc/cmdline)
-    if [ -z "$is_fastboot_boot" ] && [ -n "$skip_initramfs_present" ]; then
-        log_print 2 "skip_initramfs flag found. Setting ro.boot.fastboot..."
-        $setprop_bin ro.boot.fastboot 1
-        is_fastboot_boot=$(getprop ro.boot.fastboot)
-        log_print 2 "ro.boot.fastboot=$is_fastboot_boot"
-    else
-        is_fastboot_boot=0
-    fi
+	if [ -z "$is_fastboot_boot" ] && [ -n "$skip_initramfs_present" ]; then
+		log_print 2 "skip_initramfs flag found. Setting ro.boot.fastboot..."
+		$setprop_bin ro.boot.fastboot 1
+		is_fastboot_boot=$(getprop ro.boot.fastboot)
+		log_print 2 "ro.boot.fastboot=$is_fastboot_boot"
+	else
+		log_print 2 "Recovery mode boot detected."
+		is_fastboot_boot=0
+		log_print 2 "is_fastboot_boot=$is_fastboot_boot"
+	fi
 }
 
 check_resetprop()
@@ -212,6 +218,7 @@ temp_mount()
 	mount -t ext4 -o ro "$3" "$1"
 	if [ -n "$(ls -A "$1" 2>/dev/null)" ]; then
 		log_print 2 "$2 mounted at $1."
+		$setprop_bin prepdecrypt."$2"_mounted 1
 	else
 		log_print 0 "Unable to mount $2 to temporary folder."
 		finish_error
@@ -276,6 +283,7 @@ else
 	log_print 2 "No recovery partition found."
     if [ "$SETPATCH_OVERRIDE" = "false" ]; then
         SETPATCH=true
+        log_print 2 "SETPATCH=$SETPATCH"
     else
         log_print 2 "SETPATCH Override flag found."
         log_print 2 "SETPATCH=$SETPATCH"

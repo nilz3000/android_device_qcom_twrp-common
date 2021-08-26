@@ -2,7 +2,7 @@
 
 # The below variables shouldn't need to be changed
 # unless you want to call the script something else
-SCRIPTNAME="PrepDecrypt"
+SCRIPTNAME="prepdecrypt"
 LOGFILE=/tmp/recovery.log
 
 #
@@ -10,8 +10,8 @@ LOGFILE=/tmp/recovery.log
 #
 # If you want to force setting of osver and patchlevel to the system/vendor version,
 # set the below props in init.recovery "on init" to trigger the override function
-SETPATCH_OVERRIDE=$(getprop prepdecrypt.setpatch_override)
-SETPATCH=$(getprop prepdecrypt.setpatch)
+SETPATCH_OVERRIDE=$(getprop $SCRIPTNAME.setpatch_override)
+SETPATCH=$(getprop $SCRIPTNAME.setpatch)
 if [ -z "$SETPATCH_OVERRIDE" ]; then
     SETPATCH_OVERRIDE=false
 fi
@@ -31,7 +31,7 @@ DEFAULT_LOGLEVEL=1
 # 0 Errors only
 # 1 Errors and Information
 # 2 Errors, Information, and Debugging
-CUSTOM_LOGLEVEL=$(getprop prepdecrypt.loglevel)
+CUSTOM_LOGLEVEL=$(getprop $SCRIPTNAME.loglevel)
 if [ -n "$CUSTOM_LOGLEVEL" ]; then
     __VERBOSE="$CUSTOM_LOGLEVEL"
 else
@@ -87,11 +87,11 @@ finish()
 {
 	if [ "$SETPATCH" = "true" ]; then
 		umount "$TEMPSYS"
-		$setprop_bin prepdecrypt.system_mounted 0
+		$setprop_bin $SCRIPTNAME.system_mounted 0
 		rmdir "$TEMPSYS"
 		if [ "$MNT_VENDOR" = "true" ]; then
 			umount "$TEMPVEN"
-			$setprop_bin prepdecrypt.vendor_mounted 0
+			$setprop_bin $SCRIPTNAME.vendor_mounted 0
 			rmdir "$TEMPVEN"
 		fi
 	fi
@@ -105,11 +105,11 @@ finish_error()
 {
 	if [ "$SETPATCH" = "true" ]; then
 		umount "$TEMPSYS"
-		$setprop_bin prepdecrypt.system_mounted 0
+		$setprop_bin $SCRIPTNAME.system_mounted 0
 		rmdir "$TEMPSYS"
 		if [ "$MNT_VENDOR" = "true" ]; then
 			umount "$TEMPVEN"
-			$setprop_bin prepdecrypt.vendor_mounted 0
+			$setprop_bin $SCRIPTNAME.vendor_mounted 0
 			rmdir "$TEMPVEN"
 		fi
 	fi
@@ -187,11 +187,10 @@ check_encrypt()
 check_fastboot_boot()
 {
 	is_fastboot_boot=$(getprop ro.boot.fastboot)
+	twrpfastboot=$(grep twrpfastboot /proc/cmdline)
 	if [ -n "$is_fastboot_boot" ]; then
 		log_print 2 "Fastboot boot detected. ro.boot.fastboot=$is_fastboot_boot"
-	fi
-	twrpfastboot=$(grep twrpfastboot /proc/cmdline)
-	if [ -z "$is_fastboot_boot" ] && [ -n "$twrpfastboot" ]; then
+	elif [ -z "$is_fastboot_boot" ] && [ -n "$twrpfastboot" ]; then
 		log_print 2 "twrpfastboot flag found. Setting ro.boot.fastboot..."
 		$setprop_bin ro.boot.fastboot 1
 		is_fastboot_boot=$(getprop ro.boot.fastboot)
@@ -224,8 +223,8 @@ temp_mount()
 	mount -t ext4 -o ro "$3" "$1"
 	if [ -n "$(ls -A "$1" 2>/dev/null)" ]; then
 		log_print 2 "$2 mounted at $1."
-		$setprop_bin prepdecrypt."$2"_mounted 1
-		log_print 2 "prepdecrypt.$2_mounted=$(getprop prepdecrypt."$2"_mounted)"
+		$setprop_bin $SCRIPTNAME."$2"_mounted 1
+		log_print 2 "$SCRIPTNAME.$2_mounted=$(getprop "$SCRIPTNAME"."$2"_mounted)"
 	else
 		log_print 0 "Unable to mount $2 to temporary folder."
 		finish_error

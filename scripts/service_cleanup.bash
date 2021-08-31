@@ -56,14 +56,18 @@ remove_section() {
   fi;
 }
 
+echo " "
+echo -e "Running $SCRIPTNAME script for Qcom decryption...\n"
+
 target_device=${TARGET_PRODUCT#*_}
 
 # Define OUT folder
-if [ "$OUT_DIR" = "/builds/out" ]; then
+if [ "$PWD" = "/builds/min-aosp11" ]; then
 	OUT="/builds/out"
 else
 	OUT="$PWD/out/target/product/$target_device"
 fi
+echo -e "OUT Folder set to: $OUT"
 
 oem=$(find "$PWD/device" -type d -name "$target_device" | sed -E "s/.*device\/(.*)\/$target_device.*/\1/")
 dt_ramdisk="$PWD/device/$oem/$target_device/recovery/root"
@@ -73,9 +77,6 @@ sysbin="system/bin"
 venbin="vendor/bin"
 decrypt_rc="init.recovery.qcom_decrypt.rc"
 decrypt_fbe_rc="init.recovery.qcom_decrypt.fbe.rc"
-
-echo " "
-echo -e "Running $SCRIPTNAME script for Qcom decryption...\n"
 
 if [ -e "$rootout/$decrypt_fbe_rc" ]; then
 	is_fbe=true

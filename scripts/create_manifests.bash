@@ -94,7 +94,14 @@ generate_manifests()
 }
 
 target_device=${TARGET_PRODUCT#*_}
-OUT="$PWD/out/target/product/$target_device"
+
+# Define OUT folder
+if [ "$OUT_DIR" = "/builds/out" ]; then
+	OUT="/builds/out"
+else
+	OUT="$PWD/out/target/product/$target_device"
+fi
+
 oem=$(find "$PWD/device" -type d -name "$target_device" | sed -E "s/.*device\/(.*)\/$target_device.*/\1/")
 dt_ramdisk="$PWD/device/$oem/$target_device/recovery/root"
 recoveryout="$OUT/recovery/root"

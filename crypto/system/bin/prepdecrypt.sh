@@ -313,7 +313,7 @@ if [ "$sdkver" -ge 26 ]; then
 
 		check_dynamic
 
-		BUILDPROP=build.prop
+		BUILDPROP="build.prop"
 		TEMPSYS=/s
 		syspath="/dev/block/bootdevice/by-name/system$suffix"
 
@@ -330,22 +330,28 @@ if [ "$sdkver" -ge 26 ]; then
 				log_print 2 "Current vendor Android SDK version: $vensdkver"
 				if [ "$vensdkver" -gt 25 ]; then
 					log_print 2 "Current vendor is Oreo or above. Proceed with setting vendor security patch level..."
+					venpatchlevel=$(getprop ro.vendor.build.security_patch)
 					log_print 2 "Current Vendor Security Patch Level: $venpatchlevel"
-					venpatchlevel=$(grep -i 'ro.vendor.build.security_patch=' "$TEMPVEN/$BUILDPROP"  | cut -f2 -d'=' -s)
-					if [ -n "$venpatchlevel" ]; then
-						$setprop_bin "ro.vendor.build.security_patch" "$venpatchlevel"
-						sed -i "s/ro.vendor.build.security_patch=.*/ro.vendor.build.security_patch=""$venpatchlevel""/g" "/$DEFAULTPROP" ;
+					venpatchlevel_device=$(grep -i 'ro.vendor.build.security_patch=' "$TEMPVEN/$BUILDPROP"  | cut -f2 -d'=' -s)
+					if ! [ "$venpatchlevel" = "venpatchlevel_device" ]; then
+						$setprop_bin "ro.vendor.build.security_patch" "$venpatchlevel_device"
+						sed -i "s/ro.vendor.build.security_patch=.*/ro.vendor.build.security_patch=""$venpatchlevel_device""/g" "/$DEFAULTPROP" ;
 						venpatchlevel_new=$(getprop ro.vendor.build.security_patch)
 						venpatchlevel_default=$(grep -i 'ro.vendor.build.security_patch=' /$DEFAULTPROP | cut -f2 -d'=' -s)
-						if [ "$venpatchlevel" = "$venpatchlevel_new" ]; then
+						if [ "$venpatchlevel_device" = "$venpatchlevel_new" ]; then
 							log_print 2 "$setprop_bin successful! New Vendor Security Patch Level: $venpatchlevel_new"
 						else
 							log_print 0 "$setprop_bin failed. Vendor Security Patch Level unchanged."
 						fi
-						if [ "$venpatchlevel" = "$venpatchlevel_default" ]; then
+						if [ "$venpatchlevel_device" = "$venpatchlevel_default" ]; then
 							log_print 2 "$DEFAULTPROP update successful! ro.vendor.build.security_patch=$venpatchlevel_default"
 						else
 							log_print 0 "$DEFAULTPROP update failed. Vendor Security Patch Level unchanged."
+						fi
+					else
+						venpatchlevel_default=$(grep -i 'ro.vendor.build.security_patch=' /$DEFAULTPROP | cut -f2 -d'=' -s)
+						if ! [ "$venpatchlevel_device" = "$venpatchlevel_default" ]; then
+							sed -i "s/ro.vendor.build.security_patch=.*/ro.vendor.build.security_patch=""$venpatchlevel_device""/g" "/$DEFAULTPROP" ;
 						fi
 					fi
 				else
@@ -354,14 +360,10 @@ if [ "$sdkver" -ge 26 ]; then
 			fi
 		fi
 
+		BUILDPROP="system/build.prop"
+
 		temp_mount "$TEMPSYS" "system" "$syspath"
 
-		sar=$(getprop ro.build.system_root_image)
-		if [ "$sar" = "true" ]; then
-			log_print 2 "System-as-Root device detected! Updating build.prop path variable..."
-			BUILDPROP="system/build.prop"
-			log_print 2 "Build.prop location set to $BUILDPROP."
-		fi
 		if [ -f "$TEMPSYS/$BUILDPROP" ]; then
 			log_print 2 "Build.prop exists! Reading system properties from build.prop..."
 			sdkver=$(grep -i 'ro.build.version.sdk=' "$TEMPSYS/$BUILDPROP"  | cut -f2 -d'=' -s)

@@ -9,11 +9,12 @@ LOGFILE=/tmp/recovery.log
 # Override default settings
 #
 # If you want to force setting of osver and patchlevel to the system/vendor version,
-# set the below props in init.recovery "on init" to trigger the override function
-SETPATCH_OVERRIDE=$(getprop $SCRIPTNAME.setpatch_override)
+# set the below prop in init.recovery "on init" to trigger the override function
 SETPATCH=$(getprop $SCRIPTNAME.setpatch)
-if [ -z "$SETPATCH_OVERRIDE" ]; then
+if [ -z "$SETPATCH" ]; then
     SETPATCH_OVERRIDE=false
+else
+    SETPATCH_OVERRIDE=true
 fi
 
 #
@@ -295,10 +296,8 @@ else
 	log_print 2 "No recovery partition found."
     if [ "$SETPATCH_OVERRIDE" = "false" ]; then
         SETPATCH=true
-        log_print 2 "SETPATCH=$SETPATCH"
     else
         log_print 2 "SETPATCH Override flag found."
-        log_print 2 "SETPATCH=$SETPATCH"
     fi
 fi
 
@@ -323,6 +322,7 @@ if [ "$sdkver" -ge 26 ]; then
 		syspath="/dev/block/bootdevice/by-name/system$suffix"
 
 		if [ "$sdkver" -ge 29 ]; then
+			SAR=true
 			MNT_VENDOR=true
 			TEMPVEN=/v
 			venpath="/dev/block/bootdevice/by-name/vendor$suffix"
@@ -363,9 +363,15 @@ if [ "$sdkver" -ge 26 ]; then
 					log_print 2 "Current vendor is Nougat or older. Skipping vendor security patch level setting..."
 				fi
 			fi
+		else
+			SAR=$(getprop ro.build.system_root_image)
 		fi
 
-		BUILDPROP="system/build.prop"
+		if [ "$SAR" = "true" ]; then
+			log_print 2 "System-as-Root device detected! Updating build.prop path variable..."
+			BUILDPROP="system/build.prop"
+			log_print 2 "Build.prop location set to $BUILDPROP."
+		fi
 
 		temp_mount "$TEMPSYS" "system" "$syspath"
 

@@ -191,13 +191,16 @@ check_fastboot_boot()
 	twrpfastboot=$(grep twrpfastboot /proc/cmdline)
 	skip_initramfs_present=$(grep skip_initramfs /proc/cmdline)
 	if [ -n "$is_fastboot_boot" ]; then
+		SETPATCH=false
 		log_print 2 "Fastboot boot detected. ro.boot.fastboot=$is_fastboot_boot"
 	elif [ -z "$is_fastboot_boot" ] && [ -n "$twrpfastboot" ]; then
+		SETPATCH=false
 		log_print 2 "twrpfastboot flag found. Setting ro.boot.fastboot..."
 		$setprop_bin ro.boot.fastboot 1
 		is_fastboot_boot=$(getprop ro.boot.fastboot)
 		log_print 2 "ro.boot.fastboot=$is_fastboot_boot"
 	elif [ -z "$is_fastboot_boot" ] && [ -n "$skip_initramfs_present" ]; then
+		SETPATCH=false
 		log_print 2 "skip_initramfs flag found. Setting ro.boot.fastboot..."
 		$setprop_bin ro.boot.fastboot 1
 		is_fastboot_boot=$(getprop ro.boot.fastboot)
@@ -309,7 +312,7 @@ if [ "$sdkver" -ge 26 ]; then
 	check_fastboot_boot
 
 	log_print 1 "SETPATCH=$SETPATCH"
-	if [ "$SETPATCH" = false ] || [ -n "$is_fastboot_boot" ]; then
+	if [ "$SETPATCH" = false ]; then
 		update_default_values "$osver" "$osver_orig" "OS version" "ro.build.version.release" osver_default_value
 		update_default_values "$patchlevel" "$patchlevel_orig" "Security Patch Level" "ro.build.version.security_patch" patchlevel_default_value
 	else

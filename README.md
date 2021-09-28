@@ -114,10 +114,15 @@ setprop prepdecrypt.setpatch true
 (you can also force the script to never set the patch level to match system by setting the above override prop to `false`)
 
 ### Property Triggers
+The initial detection that the script performs is to determine whether TWRP was fastboot booted. If the image is being run from fastboot, then there is no need to temp mount any partitions, as the TWRP ramdisk will include any needed files for decryption to function.
+If a fastboot boot is detected, the below prop will be set:
+```
+ro.boot.fastboot=1
+```
 When prepdecrypt sets OS version and patch level, the script will temporary mount system and vendor to `/s` and `/v`, respectively. Props will be set to indicate that this mounting has taken place, as indicated below:
 ```
 prepdecrypt.system_mounted
 prepdecrypt.vendor_mounted
 (1 = mounted, 0 = unmounted)
 ```
-These values can be used as `on property` triggers in your `init.recovery.$(ro.hardware).rc` file if you have other operations to perform that require system or vendor to be mounted.
+These values can be used as `on property` triggers in your `init.recovery.$(ro.hardware).rc` file if you have other operations to perform that require TWRP to be fastboot booted or system or vendor to be mounted.

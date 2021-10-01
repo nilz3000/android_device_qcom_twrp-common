@@ -15,6 +15,13 @@ find_dt_blobs()
 	included_blobs=($(find "$blob_path" -type f \( -name "*keymaster*" -o -name "*gatekeeper*" \) | awk -F'/' '{print $NF}'))
 }
 
+find_oem()
+{
+	oem=$(find "$PWD/device" -type d -name "$target_device")
+	oem=${oem##*device/}
+	oem=${oem%%/*}
+}
+
 generate_manifests()
 {
 	mkdir -p "$systemout/$manifest_folder"
@@ -97,6 +104,7 @@ echo " "
 echo -e "Running $SCRIPTNAME script for Qcom decryption...\n"
 
 target_device=${TARGET_PRODUCT#*_}
+find_oem
 
 # Define OUT folder
 if [ "$PWD" = "/builds/min-aosp11" ]; then
@@ -106,7 +114,6 @@ else
 fi
 echo -e "OUT Folder set to: $OUT\n"
 
-oem=$(find "$PWD/device" -type d -name "$target_device" | sed -E "s/.*device\/(.*)\/$target_device.*/\1/")
 dt_ramdisk="$PWD/device/$oem/$target_device/recovery/root"
 recoveryout="$OUT/recovery/root"
 rootout="$OUT/root"

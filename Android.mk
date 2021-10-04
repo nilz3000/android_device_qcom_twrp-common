@@ -32,8 +32,7 @@ ifeq ($(BOARD_USES_QCOM_FBE_DECRYPTION),true)
     # from TARGET_ROOT_OUT thereafter
     LOCAL_POST_INSTALL_CMD += \
         cp -f $(LOCAL_PATH)/crypto_fbe/init.recovery* $(TARGET_ROOT_OUT); \
-        bash $(LOCAL_PATH)/scripts/service_cleanup.bash; \
-        bash $(LOCAL_PATH)/scripts/create_manifests.bash
+        bash $(LOCAL_PATH)/scripts/service_cleanup.bash;
     include $(BUILD_PHONY_PACKAGE)
 endif
 
@@ -76,8 +75,7 @@ ifeq ($(BOARD_USES_QCOM_DECRYPTION),true)
     endif
     ifeq ($(BOARD_USES_QCOM_FBE_DECRYPTION),)
         LOCAL_POST_INSTALL_CMD += \
-            bash $(LOCAL_PATH)/scripts/service_cleanup.bash; \
-            bash $(LOCAL_PATH)/scripts/create_manifests.bash
+            bash $(LOCAL_PATH)/scripts/service_cleanup.bash;
     endif
     include $(BUILD_PHONY_PACKAGE)
 endif

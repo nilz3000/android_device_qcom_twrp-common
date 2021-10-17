@@ -28,8 +28,8 @@ check_setpatch_override()
 # set to the below values respectively if these props are blank when
 # the script runs. These values should be updated to reflect the
 # TWRP defaults in your device's BoardConfig.mk
-osver_twrp="80"
-patchlevel_twrp="2099-12-31"
+osver_twrp="127"
+patchlevel_twrp="2127-12-31"
 
 # Set default log level
 DEFAULT_LOGLEVEL=1

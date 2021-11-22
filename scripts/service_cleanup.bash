@@ -105,9 +105,8 @@ if [ -n "$included_blobs" ]; then
 	printf '%s\n' "${included_blobs[@]}"
 	echo " "
 else
-	echo "No blobs parsed! Exiting script."
+	echo "No blobs parsed!"
 	echo " "
-	exit 0
 fi
 
 # pull filenames from init.recovery.qcom_decrypt.rc & init.recovery.qcom_decrypt.fbe files
@@ -128,7 +127,7 @@ echo " "
 
 # remove unneeded services
 for service in ${services_not_included[@]}; do
-	if [ "$sdkver" -lt 29 ]; then
+	if [ -z "$sdkver" ] || [ "$sdkver" -lt 29 ]; then
 		# android 9.0 branch
 		find_service_names "sbin"
 	else

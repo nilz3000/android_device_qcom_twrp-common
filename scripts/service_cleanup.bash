@@ -70,11 +70,7 @@ target_device=${TARGET_PRODUCT#*_}
 find_oem
 
 # Define OUT folder
-if [ "$PWD" = "/builds/min-aosp11" ]; then
-	OUT="/builds/out/target/product/$target_device"
-else
-	OUT="$PWD/out/target/product/$target_device"
-fi
+OUT="$OUT_DIR/target/product/$target_device"
 echo -e "OUT Folder set to: $OUT\n"
 
 dt_ramdisk="$PWD/device/$oem/$target_device/recovery/root"

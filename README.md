@@ -39,7 +39,7 @@ import /init.recovery.qcom_decrypt.rc
 
 If you forget to add the above import, the build tree will add it for you if it can find the `init.recovery.qcom.rc` file. Otherwise, there will be a warning near the end of the build system output that the import needs to be added.
 
-If for some reason these scripts do not work for you, increase the loglevel to `2` in [prepdecrypt.sh](https://github.com/TeamWin/android_device_qcom_twrp-common/blob/android-10/crypto/system/bin/prepdecrypt.sh#L22) and review the additional logging in the recovery.log to see where the process is failing.
+If for some reason these scripts do not work for you, see the [Troubleshooting/Debugging section below](https://github.com/TeamWin/android_device_qcom_twrp-common/tree/android-11#troubleshootingdebugging) and review the additional logging in the recovery.log to see where the process is failing.
 
 ## Example Device Trees
 - android-8.1: [HTC U12+](https://github.com/TeamWin/android_device_htc_ime/tree/android-8.1/recovery/root)

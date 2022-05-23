@@ -12,7 +12,7 @@ LOGFILE=/tmp/recovery.log
 # set to the below values respectively if these props are blank when
 # the script runs. These values should be updated to reflect the
 # TWRP defaults in your device's BoardConfig.mk
-osver_twrp="20.1.0"
+osver_twrp="99.87.36"
 patchlevel_twrp="2099-12-31"
 
 # Set default log level
